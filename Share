@@ -1,0 +1,106 @@
+from tkinter import *
+from os import *
+from datetime import datetime
+import shutil
+
+server_path = "C:/Users/Andrii Suprunovych/Desktop/Python test/Server DENG"
+
+
+def destinations(project_name):
+    phase = r.get ()
+    for f in listdir (server_path):
+        if f.count (project_name) == 1:
+            destination_server_rvt = path.join (server_path, f, "ENG/Model")
+            destination_server_dwg = path.join (server_path, f, "ENG/Export/DWG")
+            destination_server_xls = path.join (server_path, f, "ENG/Drawing list")
+            if phase == 5:
+                destination_server_pdf = path.join (server_path, f, "ENG/Export/PDF/3_Construction-P5")
+            elif phase == 4:
+                destination_server_pdf = path.join (server_path, f, "ENG/Export/PDF/2_Tender-P4")
+            elif phase == 2 or phase == 3:
+                destination_server_pdf = path.join (server_path, f, "ENG/Export/PDF/1_Scheme/P2-P3")
+            elif phase == 1:
+                destination_server_pdf = path.join (server_path, f, "ENG/Export/PDF/1_Scheme/P1")
+    return destination_server_rvt, destination_server_pdf, destination_server_dwg, destination_server_xls
+
+
+def create_project_folder(full_path):
+    phase = r.get ()  # we get phase of the project from radiobutton (start window)
+    project_name_set = set ()
+    extentions = []
+    for f in listdir ():
+        f_name, f_ext = path.splitext (f)  # separate every file name into two parts
+        if f_name.count ("ST-") < 1:
+            continue
+        elif f_ext == ".pdf" or f_ext == ".dwg" or f_ext == ".rvt":
+            project_name = (f_name[f_name.find ("ST-") + 3: f_name.find ("ST-") + 7])
+            project_name_set.add (project_name)
+            extentions.append (f_ext)
+    for j in project_name_set:
+        proj_name = j
+        if ".pdf" in extentions or ".dwg" in extentions:  # if we have pdf or dwg-we create XXXX-01-PX, else - XXXX-01-M
+            if phase == 2 or phase == 3:
+                output_folder_name = str (j) + "-01-P2-3"
+            else:
+                output_folder_name = str (j) + "-01-P" + str (phase)
+        else:
+            output_folder_name = str (j) + "-01-M"
+
+        second_full_path = path.join (full_path, output_folder_name)
+        try:
+            mkdir (second_full_path)
+        finally:
+            return second_full_path, proj_name
+
+
+def button_press():
+    now = datetime.now ()
+    output_folder_name = "PDF-Today " + (now.strftime ("%d.%m.%y"))
+    full_path = path.join (server_path, "_OUT", output_folder_name)
+    try:
+        mkdir (full_path)  # we have created folder inside folder _OUT
+    finally:
+        destination_out, project_name = create_project_folder (full_path)
+        destination_server_rvt, destination_server_pdf, destination_server_dwg, destination_server_xls = destinations (
+            project_name)
+        for f in listdir ():
+            f_name, f_ext = path.splitext (f)  # separate every file name into two parts
+            if f_name.count ("ST-") < 1 and f_ext != ".xls":
+                continue
+            elif f_ext == ".pdf":
+                shutil.copy (f, destination_out)
+                shutil.copy (f, destination_server_pdf)
+            elif f_ext == ".dwg":
+                shutil.copy (f, destination_out)
+                shutil.copy (f, destination_server_dwg)
+            elif f_ext == ".rvt":
+                shutil.copy (f, destination_out)
+                shutil.copy (f, destination_server_rvt)
+            elif f_ext == ".xls":
+                shutil.copy (f, destination_out)
+                shutil.copy (f, destination_server_xls)
+
+
+main_window = Tk ()
+main_window.title ("Share project files")
+main_window.geometry ("360x280")   # window size
+main_window.wm_resizable (width=False, height=False) # width and height of the window has blocked
+main_window.wm_attributes ("-alpha", 0.95)  # transparency 95%
+main_window.iconbitmap ("C:/Users/Andrii Suprunovych/PycharmProjects/Share/Social.ico")
+
+r = IntVar ()
+
+label1 = Label (main_window,
+                height=2,
+                width=30,
+                text="  Select phase of the project  ",
+                font=("Revit_HEB_DWG", 14)).pack ()
+radiobutton1 = Radiobutton (main_window, text="Phase 1", font=("Revit_HEB_DWG", 14), variable=r, value=1).pack ()
+radiobutton2 = Radiobutton (main_window, text="Phase 2", font=("Revit_HEB_DWG", 14), variable=r, value=2).pack ()
+radiobutton3 = Radiobutton (main_window, text="Phase 3", font=("Revit_HEB_DWG", 14), variable=r, value=3).pack ()
+radiobutton4 = Radiobutton (main_window, text="Phase 4", font=("Revit_HEB_DWG", 14), variable=r, value=4).pack ()
+radiobutton5 = Radiobutton (main_window, text="Phase 5", font=("Revit_HEB_DWG", 14), variable=r, value=5).pack ()
+button1 = Button (main_window, text="Share project files", bg="light green", command=button_press,
+                  font=("Revit_HEB_DWG", 14)).place (x=95, y=220)
+
+main_window.mainloop ()
