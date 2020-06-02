@@ -65,7 +65,7 @@ def button_press():
             project_name)
         for f in listdir ():
             f_name, f_ext = path.splitext (f)  # separate every file name into two parts
-            if f_name.count ("ST-") < 1 and f_ext != ".xls":
+            if f_name.count ("ST-") < 1 and f_ext != ".xls" and f_ext != ".rvt":
                 continue
             elif f_ext == ".pdf":
                 shutil.copy (f, destination_out)
